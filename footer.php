@@ -58,6 +58,7 @@ $container = get_theme_mod( 'understrap_container_type' );
 
 </div><!-- copyright -->
 
+<div id="back-top" style="display: block;"><a href="#page" aria-label="scroll to top of page"><i class="fas fa-chevron-circle-up"></i></a></div>
 
 </div><!-- #page we need this extra closing tag here -->
 

@@ -23646,6 +23646,100 @@ a.button:hover, a.button:focus, a.button:active {
   }
 }
 
+#full-width-front-page-wrapper {
+  margin: 0;
+  padding: 0;
+}
+
+.full {
+  width: 100vw;
+  margin: 0 calc(50% - 50vw);
+  background-color: #E6E7E8;
+  padding-top: 1.875rem;
+  padding-bottom: 1.875rem;
+}
+@media (min-width: 768px) {
+  .full {
+    padding-top: 3.125rem;
+  }
+}
+@media (min-width: 768px) {
+  .full {
+    padding-bottom: 3.125rem;
+  }
+}
+.full .wp-block-group__inner-container {
+  width: 100%;
+  padding-right: var(--bs-gutter-x, 0.75rem);
+  padding-left: var(--bs-gutter-x, 0.75rem);
+  margin-right: auto;
+  margin-left: auto;
+  width: calc(100% - 20px);
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 576px) {
+  .full .wp-block-group__inner-container {
+    max-width: 540px;
+  }
+}
+@media (min-width: 768px) {
+  .full .wp-block-group__inner-container {
+    max-width: 720px;
+  }
+}
+@media (min-width: 992px) {
+  .full .wp-block-group__inner-container {
+    max-width: 960px;
+  }
+}
+@media (min-width: 1200px) {
+  .full .wp-block-group__inner-container {
+    max-width: 1140px;
+  }
+}
+@media (min-width: 1400px) {
+  .full .wp-block-group__inner-container {
+    max-width: 1320px;
+  }
+}
+@media (min-width: 768px) {
+  .full .wp-block-group__inner-container {
+    width: calc(100% - 30px);
+  }
+}
+
+.welcome_block {
+  position: relative;
+}
+.welcome_block:before, .welcome_block:after {
+  background-image: url(../images/snake.svg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: -6.25rem;
+  height: 12.5rem;
+  width: 110%;
+  left: -5%;
+  content: "";
+  display: none;
+}
+.welcome_block:after {
+  top: auto;
+  bottom: 0.625rem;
+  transform: scaleX(-1);
+}
+@media (min-width: 992px) {
+  .welcome_block {
+    padding-top: 6.25rem;
+    padding-bottom: 6.25rem;
+  }
+  .welcome_block:before, .welcome_block:after {
+    display: block;
+  }
+}
+
 .has-blue-color,
 .has-blue-color:visited {
   color: #315aaa;

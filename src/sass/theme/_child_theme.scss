@@ -13,6 +13,24 @@ html {
 	background-position: center;
 }
 
+@mixin global-max-width() {
+	@include media-breakpoint-up(sm) {
+		max-width: map-get($container-max-widths, 'sm');
+	}
+	@include media-breakpoint-up(md) {
+		max-width: map-get($container-max-widths, 'md');
+	}
+	@include media-breakpoint-up(lg) {
+		max-width: map-get($container-max-widths, 'lg');
+	}
+	@include media-breakpoint-up(xl) {
+		max-width: map-get($container-max-widths, 'xl');
+	}
+	@include media-breakpoint-up(xxl) {
+		max-width: map-get($container-max-widths, 'xxl');
+	}
+}
+
 
 @mixin button {
 	background-color: $white;
@@ -61,6 +79,17 @@ a.button {
 	background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%);
 }
 
+
+.wp-block-ingeni-structural-ingeni-structural-block {
+	border-width: 0;
+
+	.wrapper_before, .wrapper_after, .bg_img {
+		height: 0;
+		margin: 0;
+		border-width: 0;
+		overflow: visible;
+	}
+}
 
 @mixin circle-icon {
 	color: $white;
@@ -203,20 +232,26 @@ a.button {
 	@include bottom-pad-30;
 }
 
-.top-pad-50,
-.grid-container.top-pad-50 {
+@mixin top-pad-50 {
 	padding-top: rem-calc(50);
 	@include media-breakpoint-up(md) {
 		padding-top: rem-calc(80);
 	}
 }
-
-.bottom-pad-50,
-.grid-container.bottom-pad-50 {
+@mixin bottom-pad-50 {
 	padding-bottom: rem-calc(50);
 	@include media-breakpoint-up(md) {
 		padding-bottom: rem-calc(80);
 	}
+}
+.top-pad-50,
+.grid-container.top-pad-50 {
+	@include top-pad-50;
+}
+
+.bottom-pad-50,
+.grid-container.bottom-pad-50 {
+	@include  bottom-pad-50;
 }
 
 
@@ -693,4 +728,86 @@ a.button {
 		}
 
 	}
+}
+
+
+#full-width-front-page-wrapper {
+	margin: 0;
+	padding: 0;
+}
+
+.full {
+	width: 100vw;
+	margin: 0 calc(50% - 50vw);
+	background-color: $light-gray;
+	@include top-pad-30();
+	@include bottom-pad-30();
+
+	.wp-block-group__inner-container {
+		@include make-container();
+		width: calc(100% - 20px);
+
+		margin-left: auto;
+		margin-right: auto;
+		@include global-max-width();
+
+		@include media-breakpoint-up(md) {
+			width: calc(100% - 30px);
+		}
+	}
+}
+
+.welcome_block {
+	position: relative;
+
+	&:before, &:after {
+		background-image: url(../images/snake.svg);
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
+		position: absolute;
+		top: rem-calc(-100);
+		height: rem-calc(200);
+		width: 110%;
+		left: -5%;
+		content: "";
+		display: none;
+	}
+
+	&:after {
+		top: auto;
+		bottom: rem-calc(10);
+		transform: scaleX(-1);
+	}
+
+	@include media-breakpoint-up(lg) {
+		padding-top: rem-calc(100);
+		padding-bottom: rem-calc(100);
+
+		&:before, &:after {
+			display: block;
+		}
+	}
+
+}
+
+#back-top {
+    position: fixed;
+    bottom: rem-calc(60);
+    right: rem-calc(60);
+    z-index: 100;
+
+    a i {
+        color: $red;
+        font-size: rem-calc(40);
+        text-align: center;
+        position: absolute;
+        opacity: 0.9;
+
+        line-height: 100%;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
 }

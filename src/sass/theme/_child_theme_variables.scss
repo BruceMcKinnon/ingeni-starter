@@ -2,6 +2,23 @@
 // To overwrite a Bootstrap variable you don´t have to touch the Bootstrap folder.
 // Just copy a variable from src/sass/assets/bootstrap5/_variables.scss, paste it here and edit the value.
 
+
+
+$font-size-base: 1.125rem !default; // Assumes the browser default, typically `16px` = 1rem and 1.125 = 18px
+
+// scss-docs-start grid-breakpoints - change md breakpoint to match Gutenberg
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 782px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+) !default;
+// scss-docs-end grid-breakpoints
+
+
+
 $black: #0D0F11;
 $white: #FCFCFC;
 

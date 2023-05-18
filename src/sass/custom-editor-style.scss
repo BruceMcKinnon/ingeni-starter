@@ -31,3 +31,12 @@
 	font-size: $h1-font-size;
 	font-weight: $headings-font-weight;
 }
+
+
+// Place a hatched background over blocks in the editor that have the .hide CSS class applied
+.hide {
+	display: block !important;
+	background-image: linear-gradient(45deg, #ffffff 25%, #BFBFBF 25%, #BFBFBF 50%, #ffffff 50%, #ffffff 75%, #BFBFBF 75%, #BFBFBF 100%);
+	background-size: 60px 60px;
+	opacity: 0.5;
+}

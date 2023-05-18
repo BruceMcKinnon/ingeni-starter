@@ -116,6 +116,12 @@ add_action('wp_ajax_nopriv_loadmore', 'misha_loadmore_ajax_handler'); // wp_ajax
 
 
 
+add_action( 'init', 'ingeni_add_posts_menuorder' );
+function ingeni_add_posts_menuorder() {
+	add_post_type_support( 'post, page', 'page-attributes' );
+	add_post_type_support( 'page', 'excerpt' );
+}
+
 
 
 
@@ -261,8 +267,6 @@ if (!function_exists("bool2str")) {
 
 
 
-
-
 function unregister_default_footer_widgets() {
 	unregister_sidebar ( 'footer-widgets' );
 }
@@ -382,7 +386,7 @@ function ingeni_custom_logo ( $html ) {
 
 	$logo_url = wp_get_attachment_image_src( $custom_logo_id, 'full', false);
 	if ( strlen($logo_url[0]) > 0 ) {
-		$extra_style = '<div class="logo" style="background-image: url('.$logo_url[0].');" title="'.$site_name.'"></div>';
+		$extra_style = '<div class="logo" style="background-image: url('.$logo_url[0].');" alt="'.$site_name.' logo"><span class="hide">'.$site_name.'</span></div>';
 	} else {
 		$extra_style = $site_name;
 	}
@@ -391,6 +395,7 @@ function ingeni_custom_logo ( $html ) {
 
 	return $retHtml;    
 }
+
 
 
 
@@ -501,4 +506,465 @@ function footer_copyright() {
 	
 	$retHtml .= '</div>';
 	echo $retHtml;
+}
+
+
+
+add_shortcode('bl-next-events','bl_get_next_events');
+function bl_get_next_events( $atts ) {
+	$params = shortcode_atts( array(
+		'max_posts' => 6,
+		'after_link' => tribe_get_upcoming_link(),
+		'after_link_text' => 'See all events'
+	), $atts );
+
+  global $wpdb;
+
+  $retHtml = "";
+
+  $sql = $wpdb->prepare( "SELECT DISTINCT $wpdb->posts.*, $wpdb->postmeta.meta_value, $wpdb->postmeta.meta_key FROM $wpdb->posts INNER JOIN $wpdb->postmeta ON $wpdb->posts.ID = $wpdb->postmeta.post_id WHERE (post_type=%s) AND (post_status=%s) AND ($wpdb->postmeta.meta_key = '_EventStartDate') AND ($wpdb->postmeta.meta_value > UTC_TIMESTAMP()) ORDER BY $wpdb->postmeta.meta_value ASC LIMIT %d", "tribe_events", "publish", $params['max_posts'] );
+  $events = $wpdb->get_results( $sql ) ;
+
+  $hide_class = "";
+  if ( $events ) {
+    $retHtml = '<div class="row upcoming-events" >';
+
+    $retHtml .= '<div class="col-sm-12"><h2>Upcoming Events</h2></div>';
+    $mobile_bg_image = "";
+
+    foreach ( $events as $event )  {
+
+		$image_id = get_post_thumbnail_id( $event->ID );
+
+		$hero_img = '';
+
+		if ( $image_id ) {
+			$image_title = get_the_title( $image_id );
+			$image_alt = get_post_meta($image_id, '_wp_attachment_image_alt', TRUE);
+			if ( strlen(trim($image_alt)) < 1 ) {
+				$image_alt = $image_title;
+			}
+
+			// Get the srcset
+			$size = 'medium';
+			$img_src = wp_get_attachment_image_url( $image_id, $size );
+			$srcset = wp_get_attachment_image_srcset( $image_id , $size );
+
+			$sizes = 'sizes="(max-width: 48px) 480px, (max-width: 640px) 640px, (max-width: 1200px) 1200px"';
+			$hero_img = '<img src="'.$img_src.'" srcset="'.$srcset.'" '.$sizes.' loading="lazy" title="'.$image_title.'" alt="'.$image_alt.'" />';
+		}
+              
+		$retHtml .= '<div class="col-sm-12 col-md-6 col-lg-4 event">';
+
+			$retHtml .= '<a href="' . get_the_permalink($event->ID) . '">';
+			$retHtml .= $hero_img;
+
+			$retHtml .= '<div class="row event-content d-flex align-items-center">';
+				$retHtml .= '<div class="col-2 event_date text-center">';
+					$retHtml .= '<p class="dow">' . tribe_get_start_date($event->ID,false,"D") . '</p>';
+					$retHtml .= '<p class="dom">' . tribe_get_start_date($event->ID,false,"j") . '</p>';
+					$retHtml .= '<p class="mth">' . tribe_get_start_date($event->ID,false,"M") . '</p>';
+				$retHtml .= '</div>';
+				$retHtml .= '<div class="col-10 event_info">';
+					$retHtml .= '<p class="time">' . tribe_get_start_time($event->ID,false,"HH:MM") . ' - '. tribe_get_end_time($event->ID,false,"HH:MM") .'</p>';
+					$retHtml .= '<h3>' . get_the_title($event) . '</h3>';
+				$retHtml .= '</div>';
+			$retHtml .= '</div>';
+			$retHtml .= '</a>';
+
+		$retHtml .= '</div>'; // End of col
+    }
+	if ( $params['after_link'] != '') {
+		$retHtml .= '<div class="col-sm-12 after_link"><a href="'.$params['after_link'].'" title="'.$params['after_link_text'].'">'.$params['after_link_text'].'</a></div>';
+	}
+	
+    $retHtml .= '</div>'; // End of row
+  } else {
+	$retHtml .= '<div><p>No events found!</div>'; // End of row
+  }
+  return $retHtml;
+}
+
+
+function ingeni_preload_scripts() {
+	echo('<link rel="stylesheet" href="https://use.typekit.net/pbz7jhl.css">');
+}
+//add_action('wp_head', 'ingeni_preload_scripts');
+
+
+
+
+//
+// Specialised Australian Address fields
+//
+add_filter("gform_address_types", "australian_address", 10, 2);
+function australian_address($address_types, $form_id){
+  $address_types["australia"] = array(
+                                  "label" => "Australia",
+                                  "country" => "Australia",
+                                  "zip_label" => "Post Code",
+                                  "state_label" => "State",
+                                  "states" => array("ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA")
+  );
+  return $address_types;
+}
+
+
+
+// Validation an Australian phone number
+add_filter( 'gform_field_validation_1_3', 'bl_valid_au_phone', 10, 4 );
+
+
+//
+// Specialised Australian Address fields
+//
+add_filter( 'gform_phone_formats', 'au_phone_format' );
+function au_phone_format( $phone_formats ) {
+    $phone_formats['au'] = array(
+        'label'       => 'Australia',
+        'mask'        => '99 9999 9999',
+        'regex'       => '/^\({0,1}((0|\+61)(2|4|3|7|8)){0,1}\){0,1}(\ |-){0,1}[0-9]{2}(\ |-){0,1}[0-9]{2}(\ |-){0,1}[0-9]{1}(\ |-){0,1}[0-9]{3}$/',
+        'instruction' => 'Australian phone numbers.',
+    );
+ 
+    return $phone_formats;
+}
+
+// Validation an Australian phone number
+add_filter( 'gform_field_validation', 'bl_valid_au_phone', 10, 4 );
+function bl_valid_au_phone($result, $number, $form, $field)  {
+	$retVal = '';
+
+	// Make sure you are checking against phone number fields.
+	if ( is_a( $field,'GF_Field_Phone' ) ) {
+
+		if (bl_match_aus_phone($number)) {
+			$result['is_valid'] = true;
+		} else {
+			$result['is_valid'] = false;
+			$result['message']  = 'Please enter a valid phone number';
+		}
+	}
+	return $result;
+}
+
+
+function bl_match_aus_phone ( $number ) {
+	try {	
+		// Get rid of any non-numerics
+		$number = preg_replace('/[^0-9]/s', '', $number);
+		
+		if (preg_match('/^0(2|3|4|7|8)?\d{8}$/', $number) || preg_match('/^61(2|3|4|7|8)?\d{8}$/', $number) ||
+			preg_match('/^1(3|8)00\d{6}$/', $number) || preg_match('/^13\d{4}$/', $number) || 
+			preg_match('/^611(3|8)00\d{6}$/', $number) || preg_match('/^6113\d{4}$/', $number) ) {
+			$result = true;
+		}	else {
+			$result = false;
+		}
+		
+	} catch (Exception $e) {
+		$result = false;
+	}
+
+	return $result;
+}
+
+
+// Default scrolling to the GF confirmation message
+add_filter( 'gform_confirmation_anchor', function() {
+    return 100;
+} );
+
+//Remove field labels
+add_filter( 'gform_enable_field_label_visibility_settings', '__return_true' );
+
+
+
+// Send all the uploaded photos as email attachments
+//
+add_filter('gform_notification', 'change_user_notification_attachments', 10, 3);
+function change_user_notification_attachments( $notification, $form, $entry ) {
+
+	//There is no concept of admin notifications anymore, so we will need to target notifications based on other criteria, such as name
+	if($notification["name"] == "Admin Notification"){
+
+			$fileupload_fields = GFCommon::get_fields_by_type($form, array("fileupload"));
+
+			if(!is_array($fileupload_fields))
+					return $notification;
+
+			$attachments = array();
+			$upload_root = RGFormsModel::get_upload_root();
+			foreach($fileupload_fields as $field){
+					$url = $entry[$field["id"]];
+					$attachment = preg_replace('|^(.*?)/gravity_forms/|', $upload_root, $url);
+					if($attachment){
+							$attachments[] = $attachment;
+					}
+			}
+			$notification["attachments"] = $attachments;
+	}
+	return $notification;
+}
+
+
+function get_first_sentence($content, $min_character_count = 0, $max_character_count = 150, $num_sentances = 1) {
+	$retVal = $content;
+
+	// Remove H4s
+	$clean = preg_replace('#<h4>(.*?)</h4>#', '', $content);
+	$clean = wp_strip_all_tags($clean);
+	// Replace all curly quotes.
+	$clean = str_replace(array('“','”'), '"', $clean);
+
+	$locs = get_sentance_endings($clean, $min_character_count);
+	$loc = $locs[0];
+
+ 
+	$retVal = substr($clean,0, ($loc+1) );
+
+	if ($num_sentances == 2) {
+		$clean = substr( $clean, ($loc+1), (strlen($clean)-($loc+1)) );
+
+		$locs = get_sentance_endings($clean, $min_character_count);
+		$loc = $locs[0];
+		$retVal .= substr($clean,0, ($loc+1) );
+	}
+
+	if (strlen($retVal) > $max_character_count) {
+		$retVal = substr($retVal,0,$max_character_count+10);
+		$last_word = strripos($retVal,' ');
+		if ($last_word !== false) {
+			$retVal = substr($retVal,0,$last_word) . '...';
+		}
+	}
+
+
+	return $retVal;
+}
+
+
+function get_sentance_endings( $clean, $min_character_count ) {
+	$exclaim = strpos($clean, "!",$min_character_count);
+	if ($exclaim === false) {
+		$exclaim = strlen($clean)-1;
+	}
+	$question = strpos($clean, "?",$min_character_count);
+	if ($question === false) {
+		$question = strlen($clean)-1;
+	}
+	$endquote = strpos($clean, '".',$min_character_count);
+	if ($endquote === false) {
+		$endquote = strlen($clean)-1;
+	}
+	$period = strpos($clean, '.',$min_character_count);
+	if ($period === false) {
+		$period = strlen($clean)-1;
+	}
+	
+	//$loc = min( array($period,$exclaim,$question));
+	$locs = array($exclaim,$question,$endquote,$period);
+	sort( $locs );
+
+	return $locs;
+}
+
+
+add_filter('wp_handle_upload_prefilter', 'ingeni_media_library_upload_filter' );
+function ingeni_media_library_upload_filter( $file ) {
+	$is_allowed = true;
+
+	// Limit file sizes to 500k for JPGs
+	$max_jpg_size = 300;
+	// Limit DPI
+	$max_dpi = 96;
+	$preferred_dpi = 72;
+	// Limit x or y dimensions
+	$max_dimension = 4000;
+
+	$image_formats = array('image/jpeg', 'image/jpg', 'image/png', 'image/webp');
+
+	// Let's put some limit around uploaded JPGs - no photos direct from the camera allowed.
+	if ( ( $file['size'] > ( $max_jpg_size * 1024 ) ) && ( in_array( $file['type'], $image_formats ) ) ) {
+
+		// The file is > 500k
+		$is_allowed = false;
+		$file['error'] = 'JPG images must be smaller than '.$max_jpg_size.'k. Try using WEBP format.';
+
+		// Grab the EXIF data
+		$exif = exif_read_data( $file['tmp_name'], 'IFD0');
+
+		// Only check the X resolution for DPI
+		if ( array_key_exists('XResolution', $exif) ) {
+			
+			$x_dpi =  $exif['XResolution'];
+			if ( !is_numeric( $x_dpi ) ) {
+				$x_dpi = floatval( $x_dpi );
+			}
+			$x_dpi = intval( $x_dpi );
+
+			if ( $x_dpi > $max_dpi ) {
+				$is_allowed = false;
+				$file['error'] = 'This is a high resolution image ['.$x_dpi.'dpi]. It must be reduced to '.$preferred_dpi.'dpi using an image editor like PhotoShop or Paint.NET';
+			}
+		}
+	}
+    return $file;
+}
+
+
+
+
+/*
+ * Filters all menu item URLs for a ##anchor-link
+ */
+function bl_dynamic_menu_items( $menu_items ) {
+	$current_page = "{$_SERVER['SERVER_PROTOCOL']}{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
+
+	foreach ( $menu_items as $menu_item ) {
+// All the blcontact shortcodes to be used as the URL of custom links.
+			// Must include a ## before the shortcode. E.g., ##[blcontact type='misc1']
+			if ( startsWith($menu_item->url, '##%5Bblcontact') && endsWith($menu_item->url, '%5D') ) {
+				$menu_item->url = str_ireplace("##",'',$menu_item->url);
+				$shortcode = urldecode($menu_item->url);
+				//fb_log('sc: '.$shortcode);
+				$menu_item->url = do_shortcode($shortcode);
+
+			} else {
+
+				if ( startsWith($menu_item->url, '##url##/') ) {
+					$urllen = strlen($menu_item->url);
+					$menu_item->url = get_bloginfo('url') . '/' . substr($menu_item->url,8,$urllen-8);
+				}
+			}
+			$menu_item->url = str_ireplace("##", "#", $menu_item->url);
+	}
+	return $menu_items;
+}
+add_filter( 'wp_nav_menu_objects', 'bl_dynamic_menu_items' );
+
+
+
+add_shortcode("get-latest-posts","get_latest_posts");
+function get_latest_posts( $atts ){
+	$post_atts = shortcode_atts( array(
+		'catname' => 'news',
+		'orderby' => 'date',
+		'sortorder' => 'desc',
+		'numposts' => 1,
+		'offset' => 0,
+		'post_type' => 'post',
+		'post_status' => 'publish',
+		'post_parent' => 0,
+		'post_mime_type' => '',
+		'year' => '',
+	), $atts );
+
+	$attribs = array( 'posts_per_page' => $post_atts['numposts'], 'offset' => $post_atts['offset'], 'category_name' => $post_atts['catname'], 'orderby' => $post_atts['orderby'], 'order' => $post_atts['sortorder'], 'post_type' => $post_atts['post_type'] );
+
+	if ($post_atts['post_mime_type'] != '') {
+		$attribs += array('post_mime_type' => $post_atts['post_mime_type'], 'post_status' => 'any,inherit,publish');
+	} else {
+		$attribs += array('post_status' => $post_atts['post_status']);
+	}
+
+	if ( $post_atts['post_parent'] >= 0 ) {
+		$attribs += array( 'post_parent' => $post_atts['post_parent'] );
+	}
+	
+	if ( is_numeric($post_atts['year']) ) {
+		$attribs += array( 'date_query' => array('year' => $post_atts['year']) );
+	}
+
+	$myquery = new WP_Query( $attribs );
+
+	return $myquery;
+}
+
+
+
+
+add_shortcode('bl-link-it', 'bl_link_it');
+function bl_link_it( $atts ) {
+  $attribs = shortcode_atts( array(
+    'ph' => '',
+	'mail' => '',
+    'class' => '',
+    'tag' => '',
+    'text' => '',
+    'map' => '',
+    'dummy' => '',
+    'web' => '',
+	), $atts );
+
+  $retHtml = '';
+
+  $content = $attribs['text'];
+
+
+  if (strlen($attribs['ph']) > 0) {
+    $stripped = str_replace(' ','',$attribs['ph']);
+
+    if (is_numeric($stripped)) {
+      $retHtml = '<a ';
+      if (strlen($attribs['class']) > 0) {
+        $retHtml .= 'class="'.$attribs['class'].'"';
+      }
+      if (strlen($content) < 1) {
+        $content = $attribs['ph'];
+      }
+      $retHtml .= 'href="tel:'.$stripped.'">'.$content.'</a>';
+    }
+  }
+
+  if (strlen($attribs['map']) > 0) {
+    $stripped = str_replace(' ','+',$attribs['map']);
+    if (strlen($content) < 1) {
+      $content = $attribs['map'];
+    }
+    $retHtml .= '<a href="https://www.google.com.au/maps/place/'.$stripped.'" target="_blank">'.$content.'</a>';
+  }
+
+
+  if (strlen($attribs['web']) > 0) {
+    $content = $attribs['web'];
+    $url = str_replace( parse_url( $content, PHP_URL_SCHEME ) . '://', '', $content );
+    $retHtml .= '<a href="//'.$content.'" target="_blank">'.$attribs['web'].'</a>';
+  }
+
+  if (strlen($attribs['dummy']) > 0) {
+    if (strlen($content) < 1) {
+      $content = $attribs['dummy'];
+    }
+    $retHtml .= '<a href="#">'.$content.'</a>';
+  }
+
+  if (strlen($attribs['mail']) > 0) {
+    $stripped = str_replace(' ','',$attribs['mail']);
+
+    if (strpos($stripped,'@') !== false) {
+      $retHtml = '<a ';
+      if (strlen($attribs['class']) > 0) {
+        $retHtml .= 'class="'.$attribs['class'].'"';
+      }
+      if (strlen($content) < 1) {
+        $content = $attribs['mail'];
+      }
+      $retHtml .= 'href="mailto:'.$stripped.'">'.$content.'</a>';
+    } 
+  }
+  if (strlen($attribs['tag']) > 0) {
+    $stripped = str_replace(' ','-',$attribs['tag']);
+
+    if (strlen($content) < 1) {
+        $content = 'View Articles';
+    }
+    $retHtml = '<a ';
+    if (strlen($attribs['class']) > 0) {
+      $retHtml .= 'class="'.$attribs['class'].'"';
+    }
+    $retHtml .= 'href="'.get_bloginfo('url').'//tag/'.$stripped.'/">'.$content.'</a>';
+  }
+
+  return $retHtml;
 }

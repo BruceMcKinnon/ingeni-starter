@@ -5,7 +5,19 @@
  Author:       Bruce McKinnon and the Understrap Contributors
  Author URI:   https://ingeni.net
  Template:     understrap
- Version:      1.1.0
+ Version:      2022.03
  License: GNU General Public License v2 or later
  License URI: http://www.gnu.org/licenses/gpl-2.0.html
+*/
+
+/*
+
+v2022.01 - Initial release
+v2022.02 - Improve ingeni_custom_logo() for WCAG compliance
+v2022.03 - Added ingeni_media_library_upload_filter(), bl_dynamic_menu_items(), and get_latest_posts() to functions.php
+
+
+
+
+
 */

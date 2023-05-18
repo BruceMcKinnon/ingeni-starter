@@ -9,7 +9,7 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 
-<article <?php post_class(); ?> id="post-<?php the_ID(); ?>">
+<article <?php post_class( $post->post_name ); ?> id="post-<?php the_ID(); ?>">
 
 	<?php 
 	// Don't repeat the featured image and H1 if using one of these templates
